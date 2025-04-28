@@ -1,4 +1,5 @@
-import { Env } from "./types"
+import bcrypt from "bcryptjs"
+import { Env, User } from "./types"
 import { renderHtml } from "./render"
 
 async function listBucket(bucket: R2Bucket, options?: R2ListOptions): Promise<R2Objects> {
@@ -47,22 +48,80 @@ function shouldReturnOriginResponse(originResponse: Response): boolean {
     return !overwriteZeroByteObject;
 }
 
-async function get(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+async function authorize(request: Request, env: Env): Promise<boolean> {
+    const authorization = request.headers.get("authorization")
+
+    if (authorization == null || !authorization.startsWith("Basic")) {
+        return false
+    }
+
+    const split = atob(authorization.substring(6)).split(":")
+    const username = split.shift().trim()
+    const password = split.join(":").trim()
+    const table: User[] = JSON.parse(env.AUTHORIZED_USERS ?? [])
+
+    const user = table.find((user) => user.username === username)
+    if (!user) return false
+
+
+    const isMatched = await bcrypt.compare(password, user.salted_hash)
+
+    return isMatched
+}
+
+// TODO: Clear cache when upload/delete is successful
+async function _put(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    if (!await authorize(request, env)) {
+        return new Response("Not authorized.", { status: 401 })
+    }
+
+    const url = new URL(request.url)
+    // Remove leading slash
+    const path = url.pathname.substring(1)
+
+    if (request.body == null) {
+        return new Response("No body provided.", { status: 400 })
+    }
+
+    const key = path.replaceAll("+", " ")
+    const bucket = env.BUCKET_maven;
+    await bucket.put(key, request.body)
+
+    return new Response("Upload successful.")
+}
+
+async function _delete(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    if (!await authorize(request, env)) {
+        return new Response("Not authorized.", { status: 401 })
+    }
+
+    const url = new URL(request.url)
+    // Remove leading slash
+    const path = url.pathname.substring(1)
+
+    const key = path.replaceAll("+", " ")
+    const bucket = env.BUCKET_maven;
+    await bucket.delete(key)
+
+    return new Response("Delete successful.")
+}
+
+async function _get(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const originResponse = await fetch(request)
 
     const url = new URL(request.url)
     const domain = url.hostname
     const path = url.pathname
 
-    // remove the leading "/"
     const shouldDecodeURI = true
-    const objectKey = shouldDecodeURI ? decodeURIComponent(path.slice(1)) : path.slice(1)
+    // Remove leading slash
+    const objectKey = shouldDecodeURI ? decodeURIComponent(path.substring(1)) : path.substring(1)
 
     if (shouldReturnOriginResponse(originResponse)) {
         return originResponse
     }
 
-    const bucket = env.BUCKET_maven;
+    const bucket = env.BUCKET_maven
     const index = await listBucket(
         bucket,
         {
@@ -89,7 +148,7 @@ async function get(request: Request, env: Env, ctx: ExecutionContext): Promise<R
             `,
             {
                 headers: {
-                    "Content-Type": "text/html; charset=utf-8"
+                    "Content-Type": "text/html; charset=utf-8",
                 },
                 status: 404,
             },
@@ -107,13 +166,11 @@ export default {
     async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
         switch (request.method) {
             case "PUT":
-                // TODO:
-                return get(request, env, ctx)
+                return _put(request, env, ctx)
             case "DELETE":
-                // TODO:
-                return get(request, env, ctx)
+                return _delete(request, env, ctx)
             case "GET":
-                return get(request, env, ctx)
+                return _get(request, env, ctx)
             default:
                 return new Response("Method Not Allowed", {
                     status: 405,

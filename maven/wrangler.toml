@@ -1,8 +1,8 @@
 name = "maven"
 main = "src/index.ts"
 compatibility_date = "2023-03-01"
+workers_dev = false
 
-workers_dev = true
 [[routes]]
 pattern = "maven.aap.my.id/*"
 zone_name = "aap.my.id"
@@ -20,3 +20,6 @@ bucket_name = "maven"
 # https://developers.cloudflare.com/workers/observability/logs/workers-logs/
 enabled = true
 head_sampling_rate = 1 # optional. default = 1.
+
+[vars]
+ORIGIN = "maven.aap.my.id"
