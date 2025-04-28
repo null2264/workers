@@ -124,7 +124,7 @@ var renderFolders = (folders: string[]) => {
             `
             <tr class="file ">
                 <td class="hideable"></td>
-                <td class="name"><a href="/${folders[i]}"><span class="name">${cleanFolderName(folders[i])}</span></a></td>
+                <td class="name"><a href="/${folders[i]}"><span class="name">${cleanFolderName(folders[i])}/</span></a></td>
                 <td class="description">${findDesc("/" + folders[i].slice(0, -1), true) ?? "&mdash;"}</td>
                 <td class="size">&mdash;</td>
                 <td class="date hideable">&mdash;</td>
