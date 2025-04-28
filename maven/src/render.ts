@@ -5,6 +5,17 @@ export const renderHtml = (files: R2Object[], folders: string[], path: string, c
         <head>
             <title>${renderTitle(path)}</title>
             <style>
+            html {
+                font-size: 16px;
+                background-color: #222;
+                color: #AAA;
+            }
+            a[href] {
+                color: #08A5DE;
+            }
+            a[href]:hover {
+                color: #22B6EC;
+            }
             .listing {
                 font-family: monospace;
             }
@@ -36,9 +47,9 @@ export const renderHtml = (files: R2Object[], folders: string[], path: string, c
                     <tr>
                         <th class="hideable"></th>
                         <th class="name">Name</th>
-                        <th class="description">Description</th>
-                        <th class="size">Size</th>
                         <th class="date hideable">Modified</th>
+                        <th class="size">Size</th>
+                        <th class="description">Description</th>
                         <th class="hideable"></th>
                     </tr>
                     </thead>
@@ -66,11 +77,7 @@ const renderTitle = (path: string) => {
     path = path.slice(0, -1)
     return `${siteTitle} | ${cleanTitle(path)}`
     */
-    const prefix = "Index of /"
-    if (path === "/") {
-        return prefix
-    }
-    return `${prefix}${cleanTitle(path)}`
+    return `Index of ${path}`
 }
 
 
@@ -105,9 +112,9 @@ var renderGoUp = (path: string) => {
                     ../
                 </a>
             </td>
-            <td class="description">&mdash;</td>
-            <td class="size">&mdash;</td>
             <td class="date hideable">&mdash;</td>
+            <td class="size">&mdash;</td>
+            <td class="description">&mdash;</td>
             <td class="hideable"></td>
         </tr>
         `
@@ -125,9 +132,9 @@ var renderFolders = (folders: string[]) => {
             <tr class="file ">
                 <td class="hideable"></td>
                 <td class="name"><a href="/${folders[i]}"><span class="name">${cleanFolderName(folders[i])}/</span></a></td>
-                <td class="description">${findDesc("/" + folders[i].slice(0, -1), true) ?? "&mdash;"}</td>
-                <td class="size">&mdash;</td>
                 <td class="date hideable">&mdash;</td>
+                <td class="size">&mdash;</td>
+                <td class="description">${findDesc("/" + folders[i].slice(0, -1), true) ?? "&mdash;"}</td>
                 <td class="hideable"></td>
             </tr>
             `
@@ -145,9 +152,9 @@ var renderFiles = (files: R2Object[]) => {
             <tr class="file ">
                 <td class="hideable"></td>
                 <td class="name"><a href="/${files[i].key}"><span class="name">${cleanFileName(files[i].key)}</span></a></td>
-                <td class="description">${findDesc("/" + files[i].key, true) ?? "&mdash;"}</td>
-                <td class="size">${humanFileSize(files[i].size)}</td>
                 <td class="date hideable"><time datetime="${files[i].uploaded.toUTCString()}">${files[i].uploaded.toJSON()}</time></td>
+                <td class="size">${humanFileSize(files[i].size)}</td>
+                <td class="description">${findDesc("/" + files[i].key, true) ?? "&mdash;"}</td>
                 <td class="hideable"></td>
             </tr>
             `
