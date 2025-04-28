@@ -1,0 +1,22 @@
+name = "maven"
+main = "src/index.ts"
+compatibility_date = "2023-03-01"
+
+workers_dev = true
+[[routes]]
+pattern = "maven.aap.my.id/*"
+zone_name = "aap.my.id"
+# [[routes]]
+# pattern = "maven.aap.my.id"
+# custom_domain = true
+
+# Bind an R2 Bucket. Use R2 to store arbitrarily large blobs of data, such as files.
+# Docs: https://developers.cloudflare.com/r2/api/workers/workers-api-usage/
+[[r2_buckets]]
+binding = "BUCKET_maven"
+bucket_name = "maven"
+
+[observability]
+# https://developers.cloudflare.com/workers/observability/logs/workers-logs/
+enabled = true
+head_sampling_rate = 1 # optional. default = 1.
