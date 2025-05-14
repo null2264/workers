@@ -106,7 +106,7 @@ async function _delete(request: Request, env: Env, ctx: ExecutionContext): Promi
     return new Response("Delete successful.")
 }
 
-async function _get(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+async function _get(request: Request, env: Env, ctx: ExecutionContext, isHead: boolean): Promise<Response> {
     const originResponse = await fetch(request)
 
     const url = new URL(request.url)
@@ -154,12 +154,16 @@ async function _get(request: Request, env: Env, ctx: ExecutionContext): Promise<
             },
         )
     }
-    return new Response(renderHtml(files, folders, "/" + objectKey), {
+    let parameters = {
         headers: {
             "Content-Type": "text/html; charset=utf-8",
         },
         status: 200,
-    })
+    }
+    if (isHead) {
+        return new Response("", parameters)
+    }
+    return new Response(renderHtml(files, folders, "/" + objectKey), parameters)
 }
 
 export default {
@@ -169,6 +173,7 @@ export default {
                 return _put(request, env, ctx)
             case "DELETE":
                 return _delete(request, env, ctx)
+            case "HEAD":
             case "GET":
                 return _get(request, env, ctx)
             default:
