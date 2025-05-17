@@ -175,7 +175,7 @@ export default {
                 return _delete(request, env, ctx)
             case "HEAD":
             case "GET":
-                return _get(request, env, ctx)
+                return _get(request, env, ctx, request.method == "HEAD")
             default:
                 return new Response("Method Not Allowed", {
                     status: 405,
