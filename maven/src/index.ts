@@ -71,16 +71,16 @@ async function authorize(request: Request, env: Env): Promise<boolean> {
 
 // TODO: Clear cache when upload/delete is successful
 async function _put(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    if (!await authorize(request, env)) {
-        return new Response("Not authorized.", { status: 401 })
-    }
-
     const url = new URL(request.url)
     // Remove leading slash
     const path = url.pathname.substring(1)
 
     if (request.body == null) {
         return new Response("No body provided.", { status: 400 })
+    }
+
+    if (!await authorize(request, env)) {
+        return new Response("Not authorized.", { status: 401 })
     }
 
     const key = path.replaceAll("+", " ")
