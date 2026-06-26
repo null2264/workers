@@ -1,4 +1,3 @@
-import bcrypt from "bcryptjs"
 import { Env, User } from "./types"
 import { renderHtml } from "./render"
 
@@ -63,10 +62,20 @@ async function authorize(request: Request, env: Env): Promise<boolean> {
     const user = table.find((user) => user.username === username)
     if (!user) return false
 
+    const encoder = new TextEncoder()
+    const saltBuffer = encoder.encode(user.salt)
+    const passwordBuffer = encoder.encode(password)
 
-    const isMatched = await bcrypt.compare(password, user.salted_hash)
+    const combined = new Uint8Array(saltBuffer.length + passwordBuffer.length)
+    combined.set(saltBuffer)
+    combined.set(passwordBuffer, saltBuffer.length)
 
-    return isMatched
+    const hashBuffer = await crypto.subtle.digest("SHA-256", combined)
+
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const clientHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+    return clientHash === user.salted_hash
 }
 
 // TODO: Clear cache when upload/delete is successful
